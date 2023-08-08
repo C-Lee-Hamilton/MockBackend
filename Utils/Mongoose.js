@@ -1,8 +1,27 @@
+// const mongoose = require("mongoose");
+// mongoose.set("strictQuery", false);
+// const mongoDB = "insert_your_database_url_here";
+
+// main().catch((err) => console.log(err));
+// async function main() {
+//   await mongoose.connect(mongoDB);
+// }
 const mongoose = require("mongoose");
 mongoose.set("strictQuery", false);
-const mongoDB = "insert_your_database_url_here";
 
-main().catch((err) => console.log(err));
+const mongoDB = process.env.MONGODB_URL;
+
+main().catch((err) => console.error("MongoDB connection error:", err));
+
 async function main() {
-  await mongoose.connect(mongoDB);
+  try {
+    await mongoose.connect(mongoDB, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useCreateIndex: true,
+    });
+    console.log("Connected to MongoDB");
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+  }
 }

@@ -1,9 +1,13 @@
 import { MongoClient } from "mongodb";
-import bcrypt from "bcrypt";
-import express from "express";
+// import bcrypt from "bcrypt";
+// import express from "express";
 import mongoose from "mongoose";
-const router = express.Router();
+// const Users = express.Router();
 
+// import User from "../Models/User.js";
+
+import express from "express";
+const Users = express.Router();
 import User from "../Models/User.js";
 
 // Mock user data (Replace this with a database in a real-world scenario)
@@ -78,31 +82,123 @@ import User from "../Models/User.js";
 // });
 
 // const Users = () => {
-router.post("/register", function (req, res) {
+// Users.post("/register", function (req, res) {
+//   const { username, password } = req.body;
+//   User.register(
+//     new User({ username: username.username }),
+//     password.password,
+//     function (err, user) {
+//       if (err) {
+//         res.json({
+//           success: false,
+//           message: "Your account could not be saved. Error: " + err,
+//         });
+//       } else {
+//         req.login(user, (er) => {
+//           if (er) {
+//             res.json({ success: false, message: er });
+//           } else {
+//             res.json({
+//               success: true,
+//               message: "Your account has been saved",
+//             });
+//           }
+//         });
+//       }
+//     }
+//   );
+// });
+
+// export default Users;
+
+// Users.post("/register", function (req, res) {
+//   const { username, password, email } = req.body;
+
+//   console.log("Received registration request:", { username, password, email });
+
+// User.register(
+//   new User({ username: username, email: email }),
+//   password,
+//   function (err, user) {
+//     if (err) {
+//       console.error("Registration error:", err);
+//       res.json({
+//         success: false,
+//         message: "Your account could not be saved. Error: " + err,
+//       });
+//     } else {
+//       console.log("User registered successfully:", user);
+//       req.login(user, (er) => {
+//         if (er) {
+//           console.error("Login error:", er);
+//           res.json({ success: false, message: er });
+//         } else {
+//           console.log("User logged in:", user);
+//           res.json({
+//             success: true,
+//             message: "Your account has been saved",
+//           });
+//         }
+//       });
+//     }
+//   }
+// );
+// });
+// Users.post("/register", function (req, res) {
+//   const { email, password } = req.body; // Use "email" and "password"
+//   User.register(
+//     new User({ email: email }), // Use email as the username
+//     password,
+//     function (err, user) {
+//       if (err) {
+//         console.error("Registration error:", err);
+//         res.json({
+//           success: false,
+//           message: "Your account could not be saved. Error: " + err,
+//         });
+//       } else {
+//         console.log("User registered successfully:", user);
+//         req.login(user, (er) => {
+//           if (er) {
+//             console.error("Login error:", er);
+//             res.json({ success: false, message: er });
+//           } else {
+//             console.log("User logged in:", user);
+//             res.json({
+//               success: true,
+//               message: "Your account has been saved",
+//             });
+//           }
+//         });
+//       }
+//     }
+//   );
+// });
+
+// export default Users;
+Users.post("/register", function (req, res) {
+  const { email, password, username } = req.body; // Use "email", "password", and "username"
   User.register(
-    new User({ name: req.body.username }),
-    req.body.password,
+    new User({ email: email, username: username }), // Use email and username
+    password,
     function (err, user) {
       if (err) {
+        console.error("Registration error:", err);
         res.json({
           success: false,
           message: "Your account could not be saved. Error: " + err,
         });
       } else {
-        req.login(user, (er) => {
-          if (er) {
-            res.json({ success: false, message: er });
-          } else {
-            res.json({
-              success: true,
-              message: "Your account has been saved",
-            });
-          }
+        console.log("User registered successfully:", user);
+
+        // Send user data back to the frontend
+        res.json({
+          success: true,
+          message: "Your account has been saved",
+          user: user, // Include the user data
         });
       }
     }
   );
 });
-// };
-
-export default mongoose.users.users;
+export default Users;
