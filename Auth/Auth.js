@@ -1,49 +1,14 @@
 import express from "express";
-const router = express.Router();
-import { MongoClient } from "mongodb";
-import bcrypt from "bcrypt";
-import User from "../Models/User.js";
 import passport from "passport";
-// const mongoose = require("mongoose");
+import jwt from "jsonwebtoken";
 
-// // Login route
-// auth.post("/login", (req, res) => {
-//   try {
-//     const { username, password } = req.body;
-//     console.log("Register!");
+import dotenv from "dotenv";
+dotenv.config();
+// import secretKey from "dotenv/config";
+const secretKey = process.env.SECRET_KEY;
 
-//     if (!username || !password) {
-//       return res
-//         .status(400)
-//         .json({ message: "Username and password are required." });
-//     }
-
-//     // Find the user based on the provided username
-//     const user = User.find({ name: username });
-//     // const user = User.find({ userId: req.params.userId });
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found." });
-//     }
-//     console.log("User");
-//     console.log(user);
-//     console.log(password);
-//     // Compare the provided password with the hashed password stored in the database
-//     const passwordMatch = bcrypt.compare(password, user.password);
-
-//     if (!passwordMatch) {
-//       return res.status(401).json({ message: "Incorrect password." });
-//     }
-
-//     // Set a cookie to indicate successful login (You may customize the cookie options as needed)
-//     res.cookie("loggedIn", true, { httpOnly: true, maxAge: 86400000 }); // 1 day expiration
-
-//     return res.json({ user });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(400).json({ success: false });
-//   }
-// });
-
+const router = express.Router();
+//login
 router.post("/login", function (req, res) {
   if (!req.body.username) {
     res.json({ success: false, message: "Username was not given" });
@@ -62,13 +27,14 @@ router.post("/login", function (req, res) {
         } else {
           const token = jwt.sign(
             { userId: user._id, username: user.username },
-            secretkey,
+            secretKey,
             { expiresIn: "24h" }
           );
           res.json({
             success: true,
-            message: "Authentication successful",
+            message: "successful",
             token: token,
+            user: user,
           });
         }
       }
@@ -76,12 +42,36 @@ router.post("/login", function (req, res) {
   }
 });
 
-// Logout route
-router.post("/logout", (req, res) => {
+router.post("/logout", (req, res, next) => {
   // Clear the login cookie (optional: you may want to add additional logout logic)
   res.clearCookie("loggedIn");
-
   return res.status(200).json({ message: "Logged out successfully." });
 });
+
+//PasswordChange
+router.post(
+  "/change-password",
+  passport.authenticate("jwt", { session: false }),
+  function (req, res) {
+    const { oldPassword, newPassword } = req.body;
+    const user = req.user;
+
+    if (!user.validPassword(oldPassword)) {
+      return res.status(401).json({ message: "Incorrect old password" });
+    }
+
+    user.setPassword(newPassword, function (err) {
+      if (err) {
+        return res.status(500).json({ message: "Error changing password" });
+      }
+      user.save(function (err) {
+        if (err) {
+          return res.status(500).json({ message: "Error saving user" });
+        }
+        res.json({ message: "Password changed successfully" });
+      });
+    });
+  }
+);
 
 export default router;
