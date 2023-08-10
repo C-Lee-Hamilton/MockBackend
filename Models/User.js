@@ -7,6 +7,7 @@ var UserSchema = new Schema({
   email: { type: String, unique: true, required: true },
   username: { type: String, unique: true, required: true },
   interests: { type: String, required: false },
+  image: { type: String, required: false },
 });
 
 UserSchema.plugin(passportLocalMongoose);

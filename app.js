@@ -10,9 +10,42 @@ import auth from "./Auth/Auth.js";
 import mongoose from "mongoose";
 import passport from "passport";
 import User from "./Models/User.js";
+//session test
+import session from "express-session";
+import jwtstuff from "passport-jwt";
+const JwtStrategy = jwtstuff.Strategy;
+const ExtractJwt = jwtstuff.ExtractJwt;
+//end of session test
 import LocalStrategy1 from "passport-local";
 const LocalStrategy = LocalStrategy1.Strategy;
+const secretKey = process.env.SECRET_KEY;
+//session test
+const options = {
+  jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme("Bearer"),
+  secretOrKey: secretKey,
+};
+
+//end of session test
 passport.use(new LocalStrategy(User.authenticate()));
+//session passport.use
+
+passport.use(
+  new JwtStrategy(options, async (payload, done) => {
+    try {
+      const user = await User.findById(payload.userId); // Use await here
+
+      if (user) {
+        return done(null, user);
+      } else {
+        return done(null, false);
+      }
+    } catch (error) {
+      return done(error, false);
+    }
+  })
+);
+
+//end of session passport.use
 
 mongoose.set("strictQuery", false);
 const mongoDB = process.env.MONGODB_URL;
@@ -29,13 +62,21 @@ app.use(bodyParser.json());
 app.use(cors()); // Enable CORS for all routes
 app.use(cookieParser());
 
-app.use("/Users", Users);
-app.use("/Auth", auth);
-
+// express-session
+app.use(
+  session({
+    secret: secretKey,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 app.use(passport.initialize());
 app.use(passport.session());
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
+
+app.use("/Users", Users);
+app.use("/Auth", auth);
 
 // Start the server
 app.listen(port, () => {
