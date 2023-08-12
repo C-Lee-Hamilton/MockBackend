@@ -4,10 +4,11 @@ import jwt from "jsonwebtoken";
 import User from "../Models/User.js";
 import dotenv from "dotenv";
 dotenv.config();
-// import secretKey from "dotenv/config";
+
 const secretKey = process.env.SECRET_KEY;
 
 const router = express.Router();
+
 //login
 router.post("/login", function (req, res) {
   if (!req.body.username) {
@@ -41,118 +42,153 @@ router.post("/login", function (req, res) {
     })(req, res);
   }
 });
-
+//logout
 router.post("/logout", (req, res, next) => {
-  // Clear the login cookie (optional: you may want to add additional logout logic)
-  res.clearCookie("loggedIn");
+  // Clear the login cookie
+  res.clearCookie("loggedIn"); // Make sure this matches the cookie name you set
   return res.status(200).json({ message: "Logged out successfully." });
 });
 
-// Protect the route with authentication middleware
-// router.post(
-//   "/change-password",
-//   passport.authenticate("jwt", { session: false }),
-//   (req, res) => {
-//     // Get the current user ID from the authenticated user object
-//     const userId = req.user._id;
+//change password
 
-//     // Get old and new passwords from the request body
-//     const oldPassword = req.body.oldPassword;
-//     const newPassword = req.body.newPassword;
+router.post(
+  "/change-password",
+  passport.authenticate("jwt"),
+  async (req, res) => {
+    try {
+      const userId = req.user._id;
+      const oldPassword = req.body.oldPassword;
+      const newPassword = req.body.newPassword;
 
-//     // Find the user by ID and use the changePassword method
-//     User.findById(userId, (err, user) => {
-//       if (err) {
-//         return res
-//           .status(500)
-//           .json({ success: false, message: "Internal server error" });
-//       }
-//       if (!user) {
-//         return res
-//           .status(404)
-//           .json({ success: false, message: "User not found" });
-//       }
+      // Find the user by ID using async/await
+      const user = await User.findById(userId);
 
-//       // Use the changePassword method to update the password
-//       user.changePassword(oldPassword, newPassword, (err) => {
-//         if (err) {
-//           return res
-//             .status(400)
-//             .json({ success: false, message: "Password change failed" });
-//         }
-//         return res.json({
-//           success: true,
-//           message: "Password changed successfully",
-//         });
-//       });
-//     });
-//   }
-// );
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
+      }
 
-//Update User Picture
-// Protect the route with authentication middleware if needed
-// router.post("/update-user", passport.authenticate("jwt"), (req, res) => {
-//   console.log("Received headers:", req.headers); // Log received headers
-//   console.log("this is here");
-
-//   // Get user ID from the authenticated user object
-//   const userId = req.user._id;
-
-// Get updated information from the request body
-// const updatedImage = req.body.imageurl;
-
-// User.findById(
-//   userId,
-
-//   { image: updatedImage },
-//   { new: true },
-//   (err, user) => {
-//     if (err) {
-//       console.error(err); // Log the error for debugging
-//       return res
-//         .status(500)
-//         .json({ success: false, message: "Internal server error" });
-//     }
-//     if (!user) {
-//       return res
-//         .status(404)
-//         .json({ success: false, message: "User not found" });
-//     }
-
-//     console.log("User updated:", user); // Log the updated user
-//     return res.json({ success: true, user: user });
-//   }
-// );
-
-// });
-
-router.post("/update-user", passport.authenticate("jwt"), async (req, res) => {
-  try {
-    // Get user ID from the authenticated user object
-    const userId = req.user._id;
-
-    // Get updated information from the request body
-    const updatedImage = req.body.imageurl;
-
-    const user = await User.findById(userId);
-
-    if (!user) {
+      // Use the changePassword method to update the password
+      user.changePassword(oldPassword, newPassword, (err) => {
+        if (err) {
+          return res
+            .status(400)
+            .json({ success: false, message: "Password change failed" });
+        }
+        return res.json({
+          success: true,
+          message: "Password changed successfully",
+        });
+      });
+    } catch (err) {
+      console.error(err);
       return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
     }
-
-    user.image = updatedImage; // Update the user's image
-    await user.save();
-
-    console.log("User updated:", user);
-    return res.json({ success: true, user: user });
-  } catch (err) {
-    console.error(err);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
   }
-});
+);
+
+//change the user image
+router.post(
+  "/update-userImage",
+  passport.authenticate("jwt"),
+  async (req, res) => {
+    try {
+      // Get user ID from the authenticated user object
+      const userId = req.user._id;
+
+      // Get updated information from the request body
+      const updatedImage = req.body.imageurl;
+
+      const user = await User.findById(userId);
+
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
+      }
+
+      user.image = updatedImage; // Update the user's image
+      await user.save();
+
+      console.log("User updated:", user);
+      return res.json({ success: true, user: user });
+    } catch (err) {
+      console.error(err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
+);
+
+//change user name
+router.post(
+  "/update-userName",
+  passport.authenticate("jwt"),
+  async (req, res) => {
+    try {
+      // Get user ID from the authenticated user object
+      const userId = req.user._id;
+
+      // Get updated information from the request body
+      const updatedName = req.body.username;
+
+      const user = await User.findById(userId);
+
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
+      }
+
+      user.username = updatedName; // Update the user's image
+      await user.save();
+
+      console.log("User updated:", user);
+      return res.json({ success: true, user: user });
+    } catch (err) {
+      console.error(err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
+);
+//add an interest
+router.post(
+  "/add-interests",
+  passport.authenticate("jwt"),
+  async (req, res) => {
+    try {
+      // Get user ID from the authenticated user object
+      const userId = req.user._id;
+
+      // Get updated information from the request body
+      const updatedInterests = req.body.interests;
+
+      const user = await User.findById(userId);
+
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
+      }
+
+      user.interests = updatedInterests; // Update the user's interests
+      await user.save();
+
+      console.log("User updated:", user);
+      return res.json({ success: true, user: user });
+    } catch (err) {
+      console.error(err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
+);
 
 export default router;

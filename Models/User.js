@@ -6,7 +6,7 @@ const Schema = mongoose.Schema;
 var UserSchema = new Schema({
   email: { type: String, unique: true, required: true },
   username: { type: String, unique: true, required: true },
-  interests: { type: String, required: false },
+  interests: { type: Array, required: false },
   image: { type: String, required: false },
 });
 
